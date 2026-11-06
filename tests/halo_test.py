@@ -8214,6 +8214,17 @@ def run_checks(m, version, profile, results):
                      clipped: items.filter(l => { const r = l.getBoundingClientRect(); return r.width && r.right > row.right + 1; }).map(l => l.getAttribute("item-id")) };
           };
           w.resizeTo(1512, 900); await wait(800);
+          await toMail(); if (!w.TodayPane.isVisible) { tpCmd.doCommand(); await ruhig(1500); }
+          out.sweep = [];
+          const diag = () => { const c = d.getElementById("unifiedToolbarContent"); const row = d.getElementById("unifiedToolbarContainer");
+            return { win: [w.outerWidth, w.innerWidth], row: Math.round(row.getBoundingClientRect().right), content: [Math.round(c.getBoundingClientRect().left), Math.round(c.getBoundingClientRect().right)],
+              off: getComputedStyle(d.documentElement).getPropertyValue("--mc-toolbar-offset") || d.querySelector("unified-toolbar")?.style.getPropertyValue("--mc-toolbar-offset"),
+              lis: [...c.children].map(l => [l.getAttribute("item-id"), Math.round(l.getBoundingClientRect().left), Math.round(l.getBoundingClientRect().width), l.hasAttribute("mc-squeezed") ? "S" : ""]) }; };
+          for (const W of [1560, 1540, 1530, 1520, 1512]) { w.resizeTo(W, 900); await ruhig(400); const s = state("mail"); out.sweep.push([W, s.search, s.squeezed.length]); }
+          out.sweep.push(diag());
+          for (const id of ["move-to"]) d.querySelector(`#unifiedToolbarContent > li[item-id="${id}"]`)?.removeAttribute("mc-squeezed");
+          out.sweep.push(diag());
+          w.resizeTo(1512, 900); await wait(800);
           for (const [name, open] of Object.entries(go)) {
             await open(); await ruhig(700);
             if (!w.TodayPane.isVisible) { tpCmd.doCommand(); await ruhig(1500); opened.push(name); }
@@ -8227,6 +8238,7 @@ def run_checks(m, version, profile, results):
           for (const t of [...tm.tabInfo].slice(1)) tm.closeTab(t);
           w.resizeTo(1500, 900); await wait(800);
           return out;""")
+        print("SWEEP", res.pop("sweep"))
         ok = (all((v["today"] > 0 or k == "calendar") and not v["clipped"] and (v["search"] is None or v["search"] >= 40)
                   and (not v["squeezed"] or (v["search"] or 0) <= 100) for k, v in res.items())
               and res["mail16"]["today"] > 0 and not res["mail16"]["squeezed"])
@@ -10768,9 +10780,14 @@ Neu
                         leer: show(rowOf("ohne.alles@example.invalid")), ben: show(rowOf("ben.ohne@example.invalid")),
                         list: Math.round(ad.getElementById("cardsPane").getBoundingClientRect().width), mailList,
                         avatar: Math.round(ad.querySelector("#cards contact-avatar").getBoundingClientRect().width), mailAv };
+          { const dp = ad.getElementById("detailsPane"); const cl = ad.getElementById("cardsPane").getBoundingClientRect();
+            out.diag = { win: [w.outerWidth, w.innerWidth], cw: ad.documentElement.clientWidth, cl: [Math.round(cl.left), Math.round(cl.right)], dmin: ab.getComputedStyle(dp).minWidth, dpw: Math.round(dp.getBoundingClientRect().width),
+              books: Math.round(ad.getElementById("booksPane")?.getBoundingClientRect().width || 0), tp: Math.round(d.getElementById("today-pane-panel")?.getBoundingClientRect().width || 0), tpv: w.TodayPane.isVisible,
+              shared: ad.getElementById("sharedSplitter")?.width, browser: Math.round(tm.currentTabInfo.browser.getBoundingClientRect().left) }; }
           out.anyMail = [...ad.querySelectorAll('#cards tr[is="ab-card-row"]')].filter(r => getComputedStyle(r).display != "none" && /@/.test(r.querySelector(".name")?.textContent + " " + (r.querySelector(".ab-card-second-line")?.checkVisibility() ? r.querySelector(".address")?.textContent : ""))).map(r => r.querySelector(".name")?.textContent);
           tm.closeTab(tm.currentTabInfo); await ruhig(400);
           return out;""")
+        print("ABDIAG", res.get("diag"))
         a, f, e, b = res["anna"], res["firma"], res["leer"], res["ben"]
         ok = (a and a["name"] == "Anna Beispiel" and a["second"] == "Beispiel GmbH" and a["secondShown"]
               and f and f["name"] == "Nurfirma KG" and not f["secondShown"]
