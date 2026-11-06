@@ -8220,16 +8220,14 @@ def run_checks(m, version, profile, results):
             return { win: [w.outerWidth, w.innerWidth], row: Math.round(row.getBoundingClientRect().right), content: [Math.round(c.getBoundingClientRect().left), Math.round(c.getBoundingClientRect().right)],
               off: getComputedStyle(d.documentElement).getPropertyValue("--mc-toolbar-offset") || d.querySelector("unified-toolbar")?.style.getPropertyValue("--mc-toolbar-offset"),
               lis: [...c.children].map(l => [l.getAttribute("item-id"), Math.round(l.getBoundingClientRect().left), Math.round(l.getBoundingClientRect().width), l.hasAttribute("mc-squeezed") ? "S" : ""]) }; };
-          for (const W of [1560, 1540, 1530, 1520, 1512]) { w.resizeTo(W, 900); await ruhig(400); const s = state("mail"); out.sweep.push([W, s.search, s.squeezed.length]); }
-          out.sweep.push(diag());
-          for (const id of ["move-to"]) d.querySelector(`#unifiedToolbarContent > li[item-id="${id}"]`)?.removeAttribute("mc-squeezed");
-          out.sweep.push(diag());
+          w.__mcDiag = diag;
           w.resizeTo(1512, 900); await wait(800);
           for (const [name, open] of Object.entries(go)) {
             await open(); await ruhig(700);
             if (!w.TodayPane.isVisible) { tpCmd.doCommand(); await ruhig(1500); opened.push(name); }
             await ruhig(800);
             out[name] = state(name);
+            if (name == "mail") { out.sweep.push(diag()); w.dispatchEvent(new w.Event("resize")); await ruhig(800); out.sweep.push(state("mail"), diag()); }
           }
           await toMail(); w.resizeTo(1728, 1000); await wait(1800);
           out.mail16 = state("mail");
